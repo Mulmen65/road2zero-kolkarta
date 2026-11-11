@@ -1,0 +1,240 @@
+<title>Kolkarta Malmö</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Bricolage+Grotesque:opsz,wght@12..96,600&display=swap">
+<style>
+/* Layout: kontrollpanel till vänster, karta till höger, resultattabell under. Jordnära palett: torv, lera, lövgrönt. */
+:root{
+  --bg:#f6f5f1; --panel:#ffffff; --fg:#22261f; --muted:#666c5f; --line:#dcdcd2;
+  --accent:#2f6b4f; --accent-soft:#e3eee7; --warn:#a2541b;
+  --c1:#e9efe0; --c2:#c4d9a8; --c3:#e0b65a; --c4:#c9772f; --c5:#8a3b1c;
+  --display:"Bricolage Grotesque","IBM Plex Sans",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#151813; --panel:#1d211b; --fg:#e7e9e1; --muted:#9ea493; --line:#353a31;
+  --accent:#7fc29d; --accent-soft:#233229; --warn:#e2965c; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#151813; --panel:#1d211b; --fg:#e7e9e1; --muted:#9ea493; --line:#353a31;
+  --accent:#7fc29d; --accent-soft:#233229; --warn:#e2965c; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.45}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 32px;max-width:1500px;margin:0 auto;display:grid;gap:16px}
+header h1{font-family:var(--display);font-weight:600;font-size:1.7rem;margin:0;text-wrap:balance;letter-spacing:-.01em}
+header p{margin:.3rem 0 0;color:var(--muted);max-width:72ch}
+.main{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.main{grid-template-columns:1fr}}
+aside{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;display:grid;gap:16px}
+fieldset{border:0;margin:0;padding:0;display:grid;gap:8px}
+legend{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:4px}
+label.rad{display:flex;gap:8px;align-items:center;cursor:pointer}
+.param{display:grid;grid-template-columns:1fr 78px;gap:4px 8px;align-items:center}
+.param small{grid-column:1/-1;color:var(--muted);font-size:.75rem;margin-top:-2px}
+input[type=number],select{font:inherit;font-family:var(--mono);font-size:.85rem;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:5px;padding:4px 6px;width:100%;box-sizing:border-box}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button{font:inherit;background:var(--accent-soft);color:var(--fg);border:1px solid var(--line);border-radius:5px;padding:5px 10px;cursor:pointer}
+#karta{height:620px;border-radius:8px;border:1px solid var(--line);background:var(--panel)}
+@media (max-width:900px){#karta{height:440px}}
+.summa{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.summa b{font-family:var(--mono);font-size:1.4rem;font-weight:500}
+.summa span{color:var(--muted)}
+.tabell{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.84rem;min-width:860px}
+th,td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{font-weight:600;color:var(--muted);font-size:.74rem;letter-spacing:.04em;text-transform:uppercase;position:sticky;top:0;background:var(--panel);cursor:pointer}
+td:first-child,th:first-child,td:nth-child(2),th:nth-child(2){text-align:left}
+td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+td.namn{font-family:var(--body)}
+td select{width:auto;padding:2px 4px}
+tr:hover td{background:var(--accent-soft)}
+.klass{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.skala{display:flex;gap:2px;align-items:center;font-size:.72rem;color:var(--muted);flex-wrap:wrap}
+.skala i{display:inline-block;width:26px;height:9px}
+.not{font-size:.8rem;color:var(--muted);max-width:90ch}
+.not code{font-family:var(--mono);font-size:.78rem}
+/* Leaflet 1.9.4, nödvändiga regler (CSS får inte laddas från CDN i alla miljöer) */
+.leaflet-pane,.leaflet-tile,.leaflet-marker-icon,.leaflet-tile-container,.leaflet-pane>svg,.leaflet-pane>canvas,.leaflet-zoom-box,.leaflet-image-layer,.leaflet-layer{position:absolute;left:0;top:0}
+.leaflet-container{overflow:hidden;font-family:var(--body);-webkit-tap-highlight-color:transparent;outline-offset:1px}
+.leaflet-tile,.leaflet-marker-icon{user-select:none}.leaflet-tile{visibility:hidden}.leaflet-tile-loaded{visibility:inherit}
+.leaflet-container img.leaflet-tile,.leaflet-container img.leaflet-image-layer{max-width:none!important;max-height:none!important;width:auto;padding:0}
+.leaflet-image-layer{image-rendering:pixelated}
+.leaflet-pane{z-index:400}.leaflet-tile-pane{z-index:200}.leaflet-overlay-pane{z-index:400}.leaflet-shadow-pane{z-index:500}.leaflet-marker-pane{z-index:600}.leaflet-tooltip-pane{z-index:650}.leaflet-popup-pane{z-index:700}
+.leaflet-pane>svg path{pointer-events:none}.leaflet-pane>svg path.leaflet-interactive{pointer-events:visiblePainted;pointer-events:auto;cursor:pointer}
+.leaflet-control{position:relative;z-index:800;pointer-events:auto;float:left;clear:both}
+.leaflet-top,.leaflet-bottom{position:absolute;z-index:1000;pointer-events:none}.leaflet-top{top:0}.leaflet-right{right:0}.leaflet-bottom{bottom:0}.leaflet-left{left:0}
+.leaflet-right .leaflet-control{float:right;margin-right:10px}.leaflet-top .leaflet-control{margin-top:10px}.leaflet-left .leaflet-control{margin-left:10px}.leaflet-bottom .leaflet-control{margin-bottom:10px}
+.leaflet-bar{border-radius:5px;border:1px solid var(--line);background:var(--panel)}
+.leaflet-bar a{display:block;width:28px;height:28px;line-height:28px;text-align:center;text-decoration:none;color:var(--fg);font-weight:600;font-size:16px}
+.leaflet-bar a+a{border-top:1px solid var(--line)}
+.leaflet-control-attribution{background:color-mix(in srgb,var(--panel) 85%,transparent);margin:0;padding:0 5px;font-size:10px;color:var(--muted)}
+.leaflet-control-attribution a{color:var(--muted)}
+.leaflet-zoom-animated{transform-origin:0 0}.leaflet-zoom-anim .leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)}
+.leaflet-tooltip{position:absolute;padding:5px 8px;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:5px;white-space:nowrap;pointer-events:none;font-size:.8rem;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.leaflet-popup{position:absolute;text-align:left;margin-bottom:12px}
+.leaflet-popup-content-wrapper{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:7px;padding:2px}
+.leaflet-popup-content{margin:10px 12px;font-size:.82rem;min-width:220px}
+.leaflet-popup-tip-container{width:40px;height:20px;position:absolute;left:50%;margin-left:-20px;overflow:hidden;pointer-events:none}
+.leaflet-popup-tip{width:14px;height:14px;padding:1px;margin:-8px auto 0;transform:rotate(45deg);background:var(--panel);border:1px solid var(--line)}
+.leaflet-popup-close-button{position:absolute;top:2px;right:6px;text-decoration:none;color:var(--muted);font-size:18px}
+.leaflet-popup-content table{min-width:0;font-size:.78rem}.leaflet-popup-content td{padding:2px 4px;border:0}
+@media (prefers-reduced-motion:reduce){.leaflet-zoom-anim .leaflet-zoom-animated{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Kolkarta Malmö</h1>
+    <p>Originallagren från SLU och biomassalagret, och markposten för ÖP 2023:s 36 utbyggnadsområden: hur mycket kol i mark och vegetation som går förlorat när området byggs ut. Ändra parametrarna till vänster så räknas kartan och tabellen om.</p>
+  </header>
+
+  <div class="main">
+    <aside>
+      <fieldset id="lagerval"><legend>Originallager (10 m)</legend></fieldset>
+
+      <fieldset><legend>Resultatlager</legend>
+        <label class="rad"><input type="checkbox" id="visaResultat" checked> Markpost per utbyggnadsområde</label>
+        <label class="rad"><input type="checkbox" id="visaDeso"> DeSO: ohårdgjord andel (SLU)</label>
+        <div class="param"><span>Färga efter</span>
+          <select id="matt"><option value="perBostad">t CO₂ per bostad</option><option value="totalt">kt CO₂ totalt</option></select></div>
+        <div class="skala" id="skala"></div>
+      </fieldset>
+
+      <fieldset><legend>Tät blandad stad</legend>
+        <div class="param"><label for="dBl">Bostäder per ha</label><input type="number" id="dBl" value="64" step="1" min="1">
+          <small>Västra hamnen och Hyllievång syd: 64 hushåll/ha brutto</small></div>
+        <div class="param"><label for="uBl">Ohårdgjord andel i slutläget</label><input type="number" id="uBl" value="0.05" step="0.01" min="0" max="1">
+          <small>Samma stadsdelar: 0,05 (spann 0,01–0,14)</small></div>
+      </fieldset>
+
+      <fieldset><legend>Småhus</legend>
+        <div class="param"><label for="dSm">Bostäder per ha</label><input type="number" id="dSm" value="11" step="1" min="1">
+          <small>Bunkeflostrand: 11 hushåll/ha brutto</small></div>
+        <div class="param"><label for="uSm">Ohårdgjord andel i slutläget</label><input type="number" id="uSm" value="0.71" step="0.01" min="0" max="1">
+          <small>Bunkeflostrand: 0,71 (trädgårdarna räknas som gräsmark)</small></div>
+      </fieldset>
+
+      <fieldset><legend>Gemensamt</legend>
+        <div class="param"><label for="arb">Arbetsplats i bostäder</label><input type="number" id="arb" value="0.278" step="0.01" min="0">
+          <small>25 / 90 m² BTA (modellens schabloner)</small></div>
+        <div class="param"><label for="rest">Kol kvar under bebyggd mark, t C/ha</label><input type="number" id="rest" value="22" step="1" min="0">
+          <small>Länsstyrelsen i Uppsala län (2025), som i Road2Zero-OP</small></div>
+        <div class="param"><label for="tradAndel">Andel av träden på hårdgjord mark som tas bort</label><input type="number" id="tradAndel" value="0" step="0.1" min="0" max="1">
+          <small>0 = träd på torg och gator sparas (beslut 11 nov)</small></div>
+        <div class="param"><label for="tradTak">Tak för träd på hårdgjord mark, t C/ha</label><input type="number" id="tradTak" value="50" step="10" min="0">
+          <small>Gäller bara när andelen ovan är större än 0</small></div>
+        <label class="rad"><input type="checkbox" id="verksHela" checked> Verksamhetsområden tar hela den ohårdgjorda ytan</label>
+        <button id="aterstall" type="button">Återställ standardvärden</button>
+      </fieldset>
+    </aside>
+
+    <div style="display:grid;gap:12px;min-width:0">
+      <div id="karta" role="application" aria-label="Karta över Malmö"></div>
+      <div class="summa" id="summa"></div>
+    </div>
+  </div>
+
+  <div class="tabell"><table id="tab"><thead></thead><tbody></tbody></table></div>
+
+  <p class="not">Metod: tagen yta = min(områdets ohårdgjorda yta, bostadsekvivalenter / bostäder per ha). Förlust = tagen yta × (1 − ohårdgjord andel i slutläget) × kol per ha i områdets ohårdgjorda mark × 44/12, där kolet är max(0, SOC + DOM − kvarvarande kol) + biomassa. Biomassa räknas bara där SLU har markkol och inte på ytor som OpenStreetMap anger som hårdgjorda. Källor: SLU, <i>Carbon stock and carbon stock change in Swedish soils</i> (SOC och DOM, kg C/ha, 0–0,5 m); biomassalagret (t C/ha); Malmö stad, ÖP 2023 utbyggnadsområden; SCB DeSO 2025; OpenStreetMap-bidragsgivare (ODbL). Data byggs med <code>verktyg/bygg_kolkarta.py</code>.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const STD={dBl:64,uBl:0.05,dSm:11,uSm:0.71,arb:0.278,rest:22,tradAndel:0,tradTak:50};
+const KLASSER={perBostad:[2,4,6,10],totalt:[1,3,6,10]};
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const FARG=()=>['--c1','--c2','--c3','--c4','--c5'].map(css);
+const fmt=(x,d=1)=>x.toLocaleString('sv-SE',{minimumFractionDigits:d,maximumFractionDigits:d});
+let omraden=[], deso=null, typVal={}, sortering={k:'perBostad',dir:-1};
+
+const karta=L.map('karta',{zoomSnap:0.5}).setView([55.585,13.02],11.5);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,opacity:.55,
+  attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragsgivare'}).addTo(karta);
+const resultatLager=L.geoJSON(null,{style:()=>({}),onEachFeature:(f,l)=>l.on('click',()=>l.openPopup())}).addTo(karta);
+let desoLager=null, desoKontur=null; const raster={};
+
+function p(){const o={};for(const k in STD){const v=parseFloat(document.getElementById(k).value);o[k]=isFinite(v)?v:STD[k]}
+  o.verksHela=document.getElementById('verksHela').checked;return o}
+
+function rakna(pr,P){
+  const typ=typVal[pr.id]||pr.typ, D=typ==='smahus'?P.dSm:P.dBl, uend=typ==='smahus'?P.uSm:P.uBl;
+  const Au=pr.ohardgjord_ha, neq=pr.bostader+P.arb*pr.arbetsplatser;
+  let markC=0; for(const [c,n] of pr.markkol_hist) markC+=n*Math.max(0,c-P.rest)*0.01;   // t C
+  const Cu=Au>0?(markC+pr.biomassa_ohardgjord_tC)/Au:0;                                    // t C/ha
+  const tagen=(pr.kategori==='Verksamhetsområde'&&P.verksHela)?Au:Math.min(Au,neq/D);
+  let trad=0; for(const [b,n] of pr.trad_hardgjord_hist) trad+=n*Math.min(b,P.tradTak)*0.01;
+  const tC=tagen*(1-uend)*Cu+P.tradAndel*trad, t=tC*44/12;
+  return {typ,tagen,Cu,neq,t,kt:t/1000,perBostad:neq>0?t/neq:0};
+}
+
+function farg(v,matt){const g=KLASSER[matt],f=FARG();let i=0;while(i<g.length&&v>=g[i])i++;return f[i]}
+
+function rita(){
+  const P=p(), matt=document.getElementById('matt').value;
+  omraden.forEach(f=>f.r=rakna(f.properties,P));
+  resultatLager.eachLayer(l=>{const r=l.feature.r,pr=l.feature.properties;
+    l.setStyle({color:css('--fg'),weight:1,fillColor:farg(matt==='totalt'?r.kt:r.perBostad,matt),fillOpacity:.75});
+    l.bindPopup(`<b>${pr.namn}</b><br><span style="color:var(--muted)">${pr.kategori} · ${r.typ==='smahus'?'småhus':'tät blandad stad'}</span>
+      <table><tr><td>Bostäder / arbetsplatser</td><td>${pr.bostader} / ${pr.arbetsplatser}</td></tr>
+      <tr><td>Yta / varav ohårdgjord</td><td>${fmt(pr.ha)} / ${fmt(pr.ohardgjord_ha)} ha</td></tr>
+      <tr><td>Tagen yta</td><td>${fmt(r.tagen)} ha</td></tr>
+      <tr><td>Kol i ohårdgjord mark</td><td>${fmt(r.Cu,0)} t C/ha</td></tr>
+      <tr><td>Markpost</td><td><b>${fmt(r.kt,2)} kt CO₂</b></td></tr>
+      <tr><td>Per bostadsekvivalent</td><td><b>${fmt(r.perBostad)} t CO₂</b></td></tr></table>`);
+    l.unbindTooltip().bindTooltip(`${pr.namn}: ${fmt(r.perBostad)} t/bostad`,{sticky:true});});
+  // skala
+  const g=KLASSER[matt],f=FARG(),enh=matt==='totalt'?'kt':'t';
+  document.getElementById('skala').innerHTML=f.map((c,i)=>`<i style="background:${c}"></i>`).join('')+
+    `<span style="flex-basis:100%">${[0,...g].map((v,i)=>i<g.length?`${v}–${g[i]}`:`>${v}`).join(' · ')} ${enh} CO₂</span>`;
+  // summa
+  const sum=omraden.reduce((s,f)=>s+f.r.kt,0), bost=omraden.reduce((s,f)=>s+f.r.neq,0);
+  document.getElementById('summa').innerHTML=`<b>${fmt(sum)} kt CO₂</b><span>markpost för alla 36 områden</span>
+    <b>${fmt(1000*sum/bost)} t</b><span>per bostadsekvivalent i genomsnitt</span>
+    <span style="flex-basis:100%;font-size:.8rem">Jämför: Road2Zero-OP med Uppsalavärden 99,7 kt; analysen 11 nov med standardvärdena 153,4 kt.</span>`;
+  tabell();
+}
+
+const KOL=[['namn','Område'],['kategori','Kategori'],['typ','Typologi'],['bostader','Bostäder'],['arbetsplatser','Arb.pl.'],['ha','Yta ha'],
+  ['ohardgjord_ha','Ohårdgj. ha'],['tagen','Tagen ha'],['Cu','t C/ha'],['kt','kt CO₂'],['perBostad','t/bostad']];
+function tabell(){
+  const thead=document.querySelector('#tab thead'), tb=document.querySelector('#tab tbody');
+  thead.innerHTML='<tr>'+KOL.map(([k,t])=>`<th data-k="${k}">${t}${sortering.k===k?(sortering.dir<0?' ↓':' ↑'):''}</th>`).join('')+'</tr>';
+  const v=(f,k)=>k in f.r?f.r[k]:f.properties[k];
+  const rader=[...omraden].sort((a,b)=>{const x=v(a,sortering.k),y=v(b,sortering.k);return (x>y?1:x<y?-1:0)*sortering.dir});
+  const matt=document.getElementById('matt').value;
+  tb.innerHTML=rader.map(f=>{const pr=f.properties,r=f.r;
+    return `<tr><td class="namn"><span class="klass" style="background:${farg(matt==='totalt'?r.kt:r.perBostad,matt)}"></span>${pr.namn}</td>
+    <td class="namn">${pr.kategori}</td>
+    <td><select data-id="${pr.id}" aria-label="Typologi för ${pr.namn}"><option value="blandad"${r.typ==='blandad'?' selected':''}>Tät blandad stad</option><option value="smahus"${r.typ==='smahus'?' selected':''}>Småhus</option></select></td>
+    <td>${pr.bostader}</td><td>${pr.arbetsplatser}</td><td>${fmt(pr.ha)}</td><td>${fmt(pr.ohardgjord_ha)}</td>
+    <td>${fmt(r.tagen)}</td><td>${fmt(r.Cu,0)}</td><td>${fmt(r.kt,2)}</td><td>${fmt(r.perBostad)}</td></tr>`}).join('');
+}
+document.querySelector('#tab thead').addEventListener('click',e=>{const k=e.target.closest('th')?.dataset.k;if(!k)return;
+  sortering={k,dir:sortering.k===k?-sortering.dir:-1};tabell()});
+document.querySelector('#tab tbody').addEventListener('change',e=>{if(e.target.dataset.id){typVal[e.target.dataset.id]=e.target.value;rita()}});
+document.querySelector('aside').addEventListener('input',e=>{if(e.target.matches('input[type=number],#verksHela'))rita()});
+document.getElementById('matt').addEventListener('change',rita);
+document.getElementById('aterstall').addEventListener('click',()=>{for(const k in STD)document.getElementById(k).value=STD[k];
+  document.getElementById('verksHela').checked=true;typVal={};rita()});
+
+function desoStil(f){const u=f.properties.ohardgjord??0;
+  return {color:css('--muted'),weight:.6,fillColor:css('--accent'),fillOpacity:document.getElementById('visaDeso').checked?0.1+0.7*u:0}}
+document.getElementById('visaDeso').addEventListener('change',()=>desoLager&&desoLager.setStyle(desoStil));
+document.getElementById('visaResultat').addEventListener('change',e=>e.target.checked?resultatLager.addTo(karta):karta.removeLayer(resultatLager));
+
+Promise.all(['lager/lager.json','data/omraden.geojson','data/deso.geojson'].map(u=>fetch(u).then(r=>{if(!r.ok)throw new Error(u);return r.json()})))
+.then(([lager,omr,ds])=>{
+  const box=document.getElementById('lagerval');
+  lager.forEach((l,i)=>{
+    raster[l.id]=L.imageOverlay(l.fil,l.bounds,{opacity:.85,interactive:false});
+    const rad=document.createElement('div');
+    rad.innerHTML=`<label class="rad"><input type="checkbox" id="lag_${l.id}"> ${l.titel}</label>
+      <div class="skala" style="margin-left:24px">${l.farger.map(c=>`<i style="background:${c}"></i>`).join('')}<span>&nbsp;0–${l.vmax} ${l.enhet}</span></div>`;
+    box.appendChild(rad);
+    rad.querySelector('input').addEventListener('change',e=>{e.target.checked?raster[l.id].addTo(karta).bringToBack():karta.removeLayer(raster[l.id])});
+  });
+  deso=ds; desoLager=L.geoJSON(ds,{style:desoStil,onEachFeature:(f,l)=>l.bindTooltip(
+    `${f.properties.regsoName} (${f.properties.id})<br>ohårdgjord ${fmt(100*(f.properties.ohardgjord??0),0)} % · ${fmt(f.properties.hushall_per_ha,0)} hushåll/ha`,{sticky:true})}).addTo(karta);
+  omraden=omr.features; resultatLager.addData(omr); resultatLager.bringToFront();
+  karta.fitBounds(desoLager.getBounds(),{padding:[10,10]});
+  rita();
+}).catch(e=>{document.getElementById('summa').innerHTML=`<span style="color:var(--warn)">Kunde inte läsa ${e.message}. Öppna sidan via en webbserver (se README), inte direkt som fil.</span>`});
+</script>

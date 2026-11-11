@@ -1,0 +1,122 @@
+[
+ {
+  "id": "soc",
+  "titel": "SOC – markkol 0–0,5 m (SLU)",
+  "fil": "lager/soc.png",
+  "bounds": [
+   [
+    55.45812659257164,
+    12.773772976094657
+   ],
+   [
+    55.68177370796282,
+    13.291662432728193
+   ]
+  ],
+  "vmax": 200,
+  "enhet": "t C/ha",
+  "farger": [
+   "#ffffe5",
+   "#fee390",
+   "#fe9829",
+   "#cb4b02",
+   "#662506"
+  ]
+ },
+ {
+  "id": "dom",
+  "titel": "DOM – dött organiskt material (SLU)",
+  "fil": "lager/dom.png",
+  "bounds": [
+   [
+    55.45812659257164,
+    12.773772976094657
+   ],
+   [
+    55.68177370796282,
+    13.291662432728193
+   ]
+  ],
+  "vmax": 40,
+  "enhet": "t C/ha",
+  "farger": [
+   "#f7fcfd",
+   "#bfd3e6",
+   "#8c95c6",
+   "#88409c",
+   "#4d004b"
+  ]
+ },
+ {
+  "id": "biomassa",
+  "titel": "Biomassa – original (ej korrigerad)",
+  "fil": "lager/biomassa.png",
+  "bounds": [
+   [
+    55.45812659257164,
+    12.773772976094657
+   ],
+   [
+    55.68177370796282,
+    13.291662432728193
+   ]
+  ],
+  "vmax": 200,
+  "enhet": "t C/ha",
+  "farger": [
+   "#f7fcf5",
+   "#c7e9c0",
+   "#73c476",
+   "#228a44",
+   "#00441b"
+  ]
+ },
+ {
+  "id": "biomassa_korr",
+  "titel": "Biomassa – korrigerad (bara där SLU har markkol)",
+  "fil": "lager/biomassa_korr.png",
+  "bounds": [
+   [
+    55.45812659257164,
+    12.773772976094657
+   ],
+   [
+    55.68177370796282,
+    13.291662432728193
+   ]
+  ],
+  "vmax": 200,
+  "enhet": "t C/ha",
+  "farger": [
+   "#f7fcf5",
+   "#c7e9c0",
+   "#73c476",
+   "#228a44",
+   "#00441b"
+  ]
+ },
+ {
+  "id": "kol_summa",
+  "titel": "Markkol + DOM (SLU, ohårdgjord mark)",
+  "fil": "lager/kol_summa.png",
+  "bounds": [
+   [
+    55.45812659257164,
+    12.773772976094657
+   ],
+   [
+    55.68177370796282,
+    13.291662432728193
+   ]
+  ],
+  "vmax": 200,
+  "enhet": "t C/ha",
+  "farger": [
+   "#440154",
+   "#3b528b",
+   "#21918c",
+   "#5ec962",
+   "#fde725"
+  ]
+ }
+]
