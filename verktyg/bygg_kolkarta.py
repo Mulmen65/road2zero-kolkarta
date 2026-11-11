@@ -14,6 +14,8 @@ from rasterio.warp import transform_geom, reproject, calculate_default_transform
 from rasterio.features import geometry_mask, rasterize
 from rasterio.windows import from_bounds
 from shapely.geometry import shape, Polygon, LineString, mapping
+from shapely.ops import unary_union
+from shapely.validation import make_valid
 import matplotlib; matplotlib.use("Agg")
 from matplotlib import cm, colors
 from PIL import Image
@@ -60,7 +62,8 @@ def png(arr, tr, namn, vmax, cmap, enhet, titel, lager):
               resampling=Resampling.nearest, src_nodata=np.nan, dst_nodata=np.nan)
     rgba = (matplotlib.colormaps[cmap](colors.Normalize(0, vmax, clip=True)(np.nan_to_num(ut))) * 255).astype(np.uint8)
     rgba[..., 3] = np.where(np.isnan(ut), 0, 220)
-    Image.fromarray(rgba).save(os.path.join(ROT, 'lager', namn + '.png'), optimize=True)
+    # palettbild: en tredjedel av storleken, genomskinligheten behålls
+    Image.fromarray(rgba).quantize(colors=128, method=Image.Quantize.FASTOCTREE).save(os.path.join(ROT, 'lager', namn + '.png'), optimize=True)
     b = transform_bounds('EPSG:3857', 'EPSG:4326', *rasterio.transform.array_bounds(dh, dw, dst_tr))
     stopp = [colors.to_hex(matplotlib.colormaps[cmap](i / 4)) for i in range(5)]
     lager.append(dict(id=namn, titel=titel, fil=f'lager/{namn}.png', bounds=[[b[1], b[0]], [b[3], b[2]]],
@@ -116,11 +119,13 @@ def main():
     json.dump(dict(type='FeatureCollection', kalla=exp['kalla'], features=feats),
               open(os.path.join(ROT, 'data/omraden.geojson'), 'w'), ensure_ascii=False)
 
-    # DeSO: referensunderlaget
+    # DeSO: referensunderlaget, klippt mot OSM:s landpolygoner så att havet inte räknas som hårdgjord yta
     deso = json.load(open(os.path.join(ROT, 'data/kalla/deso_2025_malmo.geojson')))
+    land = unary_union([make_valid(shape(f['geometry'])) for f in json.load(open(os.path.join(ROT, 'data/kalla/land_malmo_osm.json')))['features']])
     hh = json.load(open(os.path.join(ROT, 'data/kalla/deso_hushall_2024.json')))
     for f in deso['features']:
         p = f['properties']
+        f['geometry'] = mapping(make_valid(shape(f['geometry'])).intersection(land).simplify(2e-5, preserve_topology=True))
         m = ~geometry_mask([transform_geom('EPSG:4326', 'EPSG:3006', f['geometry'])], soc.shape, tr)
         p['ohardgjord'] = round(float(oforseglad[m].mean()), 3) if m.any() else None
         p['hushall_per_ha'] = round(hh[p['id']]['hushall'] / p['land_ha'], 1)

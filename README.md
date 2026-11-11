@@ -26,7 +26,7 @@ betalt GitHub-konto.
 | `index.html` | Kartan: originallager, resultatlager, DeSO, parametrar och tabell (Leaflet 1.9.4) |
 | `lager/*.png`, `lager/lager.json` | Rasterlagren över Malmö i Web Mercator, 10 m, med färgskala |
 | `data/omraden.geojson` | Utbyggnadsområdena med förberäknad pixelstatistik (histogram över markkol, biomassa) |
-| `data/deso.geojson` | DeSO 2025 med ohårdgjord andel (SLU) och hushåll per ha 2024 |
+| `data/deso.geojson` | DeSO 2025 klippta mot land, med ohårdgjord andel (SLU) och hushåll per ha 2024 |
 | `data/kalla/` | Indata kopierade ur Road2Zero-OP: ÖP 2023, OSM-markanvändning, DeSO, hushåll (Vägvis 2.3.1) |
 | `verktyg/bygg_kolkarta.py` | Bygger `lager/` och `data/` direkt ur tiff-filerna (läser bara Malmöutsnittet över HTTP) |
 | `test/test_rakning.js` | Kontroll att sidans räkning ger analysens resultat med standardvärdena |
@@ -61,7 +61,7 @@ kol per ha = medel över ohårdgjorda rutor av max(0, SOC + DOM − kvarvarande 
 | Parameter | Standard | Status och underlag |
 |---|---|---|
 | Bostäder per ha, tät blandad stad | 64 | Mätt: Västra hamnen och Hyllievång syd (C1272), hushåll per ha brutto 2024 |
-| Ohårdgjord andel i slutläget, tät blandad stad | 0,05 | Mätt i samma DeSO ur SLU-lagret (spann 0,01–0,14) |
+| Ohårdgjord andel i slutläget, tät blandad stad | 0,20 | Mätt i samma DeSO ur SLU-lagret, på land (spann 0,04–0,32) |
 | Bostäder per ha, småhus | 11 | Mätt: Bunkeflostrand öst och väst |
 | Ohårdgjord andel, småhus | 0,71 | Mätt i samma DeSO; trädgårdar räknas som gräsmark av SLU |
 | Arbetsplats i bostadsekvivalenter | 0,278 | Modellval: 25 / 90 m² BTA (Road2Zero-OP) |
@@ -72,7 +72,11 @@ kol per ha = medel över ohårdgjorda rutor av max(0, SOC + DOM − kvarvarande 
 Typologin per område väljs i tabellen. ÖP 2023 anger bara kategori, så alla bostadsområden är tät blandad stad
 tills samrådsförslagets lager finns.
 
-Standardresultat: 153,8 kt CO₂ för alla 36 områden (Road2Zero-OP med Uppsalavärden: 99,7 kt).
+Standardresultat: 129,5 kt CO₂ för alla 36 områden (Road2Zero-OP med Uppsalavärden: 99,7 kt).
+
+Rättelse 2026-11-11: DeSO klipps nu mot OpenStreetMaps landpolygoner (`data/kalla/land_malmo_osm.json`). Tidigare räknades
+havet inom Västra hamnens DeSO som hårdgjord yta, och slutlägets ohårdgjorda andel blev 0,05 i stället för 0,20.
+Summan sjönk då från 153,8 till 129,5 kt.
 
 ## Licenser och data
 
