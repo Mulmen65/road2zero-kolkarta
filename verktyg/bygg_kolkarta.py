@@ -13,7 +13,7 @@ import ast, json, os, sys, numpy as np, rasterio
 from rasterio.warp import transform_geom, reproject, calculate_default_transform, Resampling, transform_bounds
 from rasterio.features import geometry_mask, rasterize
 from rasterio.windows import from_bounds
-from shapely.geometry import shape, Polygon, LineString, mapping
+from shapely.geometry import shape, Polygon, MultiPolygon, LineString, mapping
 from shapely.ops import unary_union
 from shapely.validation import make_valid
 import matplotlib; matplotlib.use("Agg")
@@ -22,6 +22,7 @@ from PIL import Image
 
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 URL = "/vsicurl/https://carbonaracarbon.blob.core.windows.net/carbon/{}.tif"
+MIN_LANDDEL_M2 = 5000  # landbitar under 0,5 ha tas bort (Öresundsbrons pelare räknas som land i OSM)
 BBOX = (360000, 6148000, 392000, 6172000)  # SWEREF 99 TM, täcker Malmö kommun
 os.environ.setdefault("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
 
@@ -125,7 +126,10 @@ def main():
     hh = json.load(open(os.path.join(ROT, 'data/kalla/deso_hushall_2024.json')))
     for f in deso['features']:
         p = f['properties']
-        f['geometry'] = mapping(make_valid(shape(f['geometry'])).intersection(land).simplify(2e-5, preserve_topology=True))
+        klipp = make_valid(shape(f['geometry'])).intersection(land)
+        delar = [d for d in getattr(klipp, 'geoms', [klipp]) if d.geom_type == 'Polygon'
+                 and shape(transform_geom('EPSG:4326', 'EPSG:3006', mapping(d))).area >= MIN_LANDDEL_M2]
+        f['geometry'] = mapping(MultiPolygon(delar).simplify(2e-5, preserve_topology=True))
         m = ~geometry_mask([transform_geom('EPSG:4326', 'EPSG:3006', f['geometry'])], soc.shape, tr)
         p['ohardgjord'] = round(float(oforseglad[m].mean()), 3) if m.any() else None
         p['hushall_per_ha'] = round(hh[p['id']]['hushall'] / p['land_ha'], 1)

@@ -14,8 +14,17 @@ ROT = Path(__file__).parent
 st.set_page_config(page_title="Kolkarta Malmö", layout="wide")
 
 
+def filversion() -> str:
+    """Ändras när någon av sidans filer ändras, så att cachen byggs om efter en push."""
+    import hashlib
+    h = hashlib.sha256()
+    for f in sorted([ROT / "index.html", *ROT.glob("data/*.geojson"), *ROT.glob("lager/*")]):
+        h.update(f.name.encode()); h.update(f.read_bytes())
+    return h.hexdigest()
+
+
 @st.cache_data
-def sida() -> str:
+def sida(version: str) -> str:
     inline = {}
     for namn in ["lager/lager.json", "data/omraden.geojson", "data/deso.geojson"]:
         inline[namn] = json.loads((ROT / namn).read_text(encoding="utf-8"))
@@ -27,4 +36,4 @@ def sida() -> str:
     return html.replace('<script src="https://cdnjs', data + '<script src="https://cdnjs', 1)
 
 
-components.html(sida(), height=1900, scrolling=True)
+components.html(sida(filversion()), height=1900, scrolling=True)
