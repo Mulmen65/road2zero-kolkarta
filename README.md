@@ -12,6 +12,9 @@ Sidan läser sina data med `fetch`, så den måste visas via en webbserver:
 python -m http.server 8000      # i repots rot, öppna sedan http://localhost:8000
 ```
 
+Streamlit Community Cloud: välj repot, gren `main` och main file path `streamlit_app.py`. Appen visar samma
+sida med data och lager inbäddade.
+
 Eller slå på GitHub Pages (Settings > Pages > Deploy from branch, `main`, rot). Pages för privata repon kräver ett
 betalt GitHub-konto.
 
@@ -19,6 +22,7 @@ betalt GitHub-konto.
 
 | Sökväg | Innehåll |
 |---|---|
+| `streamlit_app.py` | Samma karta i Streamlit (bäddar in data och lager) |
 | `index.html` | Kartan: originallager, resultatlager, DeSO, parametrar och tabell (Leaflet 1.9.4) |
 | `lager/*.png`, `lager/lager.json` | Rasterlagren över Malmö i Web Mercator, 10 m, med färgskala |
 | `data/omraden.geojson` | Utbyggnadsområdena med förberäknad pixelstatistik (histogram över markkol, biomassa) |
@@ -27,7 +31,7 @@ betalt GitHub-konto.
 | `verktyg/bygg_kolkarta.py` | Bygger `lager/` och `data/` direkt ur tiff-filerna (läser bara Malmöutsnittet över HTTP) |
 | `test/test_rakning.js` | Kontroll att sidans räkning ger analysens resultat med standardvärdena |
 
-Bygg om: `pip install rasterio shapely matplotlib numpy pillow`, sedan `python -I verktyg/bygg_kolkarta.py`.
+Bygg om: `pip install -r verktyg/requirements.txt`, sedan `python -I verktyg/bygg_kolkarta.py`.
 Testa: `node test/test_rakning.js`.
 
 ## Originallagren

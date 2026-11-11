@@ -220,11 +220,14 @@ function desoStil(f){const u=f.properties.ohardgjord??0;
 document.getElementById('visaDeso').addEventListener('change',()=>desoLager&&desoLager.setStyle(desoStil));
 document.getElementById('visaResultat').addEventListener('change',e=>e.target.checked?resultatLager.addTo(karta):karta.removeLayer(resultatLager));
 
-Promise.all(['lager/lager.json','data/omraden.geojson','data/deso.geojson'].map(u=>fetch(u).then(r=>{if(!r.ok)throw new Error(u);return r.json()})))
+// I Streamlit bäddas data in i sidan (window.__INLINE), annars läses filerna med fetch.
+const INL=window.__INLINE||{};
+const hamta=u=>INL[u]?Promise.resolve(INL[u]):fetch(u).then(r=>{if(!r.ok)throw new Error(u);return r.json()});
+Promise.all(['lager/lager.json','data/omraden.geojson','data/deso.geojson'].map(hamta))
 .then(([lager,omr,ds])=>{
   const box=document.getElementById('lagerval');
   lager.forEach((l,i)=>{
-    raster[l.id]=L.imageOverlay(l.fil,l.bounds,{opacity:.85,interactive:false});
+    raster[l.id]=L.imageOverlay(INL[l.fil]||l.fil,l.bounds,{opacity:.85,interactive:false});
     const rad=document.createElement('div');
     rad.innerHTML=`<label class="rad"><input type="checkbox" id="lag_${l.id}"> ${l.titel}</label>
       <div class="skala" style="margin-left:24px">${l.farger.map(c=>`<i style="background:${c}"></i>`).join('')}<span>&nbsp;0–${l.vmax} ${l.enhet}</span></div>`;
